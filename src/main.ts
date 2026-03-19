@@ -13,6 +13,7 @@ class StudioCropper {
   private imageSize = { width: 0, height: 0 };
   private cropArea: CropArea = { x: 0, y: 0, width: 400, height: 300 };
   private aspectLocked = true;
+  private lockedRatio = 1;
   private isDragging = false;
   private activeHandle: string | null = null;
   private dragStart = { x: 0, y: 0, cropX: 0, cropY: 0, cropW: 0, cropH: 0 };
@@ -123,27 +124,35 @@ class StudioCropper {
     // Dimensions
     this.widthInput.addEventListener('input', () => {
       const val = parseInt(this.widthInput.value) || 0;
-      this.updateCropArea({ width: val });
       if (this.aspectLocked) {
-        const ratio = this.cropArea.height / this.cropArea.width;
-        this.updateCropArea({ height: Math.round(val * ratio) });
+        this.updateCropArea({ width: val, height: val / this.lockedRatio }, 'width');
+      } else {
+        this.updateCropArea({ width: val }, 'width');
       }
     });
 
     this.heightInput.addEventListener('input', () => {
       const val = parseInt(this.heightInput.value) || 0;
-      this.updateCropArea({ height: val });
       if (this.aspectLocked) {
-        const ratio = this.cropArea.width / this.cropArea.height;
-        this.updateCropArea({ width: Math.round(val * ratio) });
+        this.updateCropArea({ height: val, width: val * this.lockedRatio }, 'height');
+      } else {
+        this.updateCropArea({ height: val }, 'height');
       }
     });
 
     this.lockBtn.addEventListener('click', () => {
       this.aspectLocked = !this.aspectLocked;
+      if (this.aspectLocked && this.cropArea.height > 0) {
+        this.lockedRatio = this.cropArea.width / this.cropArea.height;
+      }
       this.lockBtn.classList.toggle('bg-primary/10', this.aspectLocked);
       this.lockBtn.classList.toggle('border-primary', this.aspectLocked);
       this.lockBtn.classList.toggle('text-primary', this.aspectLocked);
+      
+      const icon = this.lockBtn.querySelector('.material-symbols-outlined');
+      if (icon) {
+        icon.textContent = this.aspectLocked ? 'link' : 'link_off';
+      }
     });
 
     this.presetsGrid.addEventListener('click', (e) => {
@@ -204,7 +213,7 @@ class StudioCropper {
         let y = this.dragStart.cropY;
         let width = this.dragStart.cropW;
         let height = this.dragStart.cropH;
-        const ratio = this.dragStart.cropW / this.dragStart.cropH;
+        const ratio = this.aspectLocked ? this.lockedRatio : this.dragStart.cropW / this.dragStart.cropH;
 
         if (this.activeHandle.includes('r')) width = this.dragStart.cropW + dx;
         if (this.activeHandle.includes('l')) {
@@ -280,6 +289,7 @@ class StudioCropper {
       const img = new Image();
       img.onload = () => {
         this.imageSize = { width: img.width, height: img.height };
+        this.lockedRatio = img.width / img.height;
         this.widthInput.max = img.width.toString();
         this.heightInput.max = img.height.toString();
         this.updateCropArea({
@@ -312,7 +322,8 @@ class StudioCropper {
 
   private applyAspectRatio(ratioStr: string) {
     const [wRatio, hRatio] = ratioStr.split(':').map(Number);
-    const ratio = wRatio / hRatio;
+    this.lockedRatio = wRatio / hRatio;
+    const ratio = this.lockedRatio;
 
     let newWidth = this.cropArea.width;
     let newHeight = newWidth / ratio;
@@ -339,10 +350,10 @@ class StudioCropper {
     }
   }
 
-  private updateCropArea(updates: Partial<CropArea>) {
+  private updateCropArea(updates: Partial<CropArea>, source?: 'width' | 'height') {
     this.cropArea = { ...this.cropArea, ...updates };
-    this.widthInput.value = Math.round(this.cropArea.width).toString();
-    this.heightInput.value = Math.round(this.cropArea.height).toString();
+    if (source !== 'width') this.widthInput.value = Math.round(this.cropArea.width).toString();
+    if (source !== 'height') this.heightInput.value = Math.round(this.cropArea.height).toString();
     this.renderOverlay();
   }
 
