@@ -29,6 +29,7 @@ class StudioCropper {
   private widthInput = document.getElementById('width-input') as HTMLInputElement;
   private heightInput = document.getElementById('height-input') as HTMLInputElement;
   private lockBtn = document.getElementById('lock-btn')!;
+  private presetsGrid = document.getElementById('presets-grid')!;
   private renderBtn = document.getElementById('render-btn')!;
   private croppedImage = document.getElementById('cropped-image') as HTMLImageElement;
   private exportMeta = document.getElementById('export-meta')!;
@@ -97,6 +98,13 @@ class StudioCropper {
       this.lockBtn.classList.toggle('text-primary', this.aspectLocked);
     });
 
+    this.presetsGrid.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('button');
+      if (btn && btn.dataset.ratio) {
+        this.applyAspectRatio(btn.dataset.ratio);
+      }
+    });
+
     // Actions
     this.renderBtn.addEventListener('click', () => this.renderCrop());
     this.resetBtn.addEventListener('click', () => this.setStep('upload'));
@@ -143,6 +151,36 @@ class StudioCropper {
       export: 'EXPORT PREVIEW'
     };
     this.statusText.textContent = statusMap[step];
+  }
+
+  private applyAspectRatio(ratioStr: string) {
+    const [wRatio, hRatio] = ratioStr.split(':').map(Number);
+    const ratio = wRatio / hRatio;
+
+    let newWidth = this.cropArea.width;
+    let newHeight = newWidth / ratio;
+
+    if (newHeight > this.imageSize.height) {
+      newHeight = this.imageSize.height;
+      newWidth = newHeight * ratio;
+    }
+    
+    if (newWidth > this.imageSize.width) {
+      newWidth = this.imageSize.width;
+      newHeight = newWidth / ratio;
+    }
+
+    // Centering
+    const newX = (this.imageSize.width - newWidth) / 2;
+    const newY = (this.imageSize.height - newHeight) / 2;
+
+    this.updateCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
+    this.renderOverlay();
+    
+    // Auto-lock aspect ratio if a preset is selected
+    if (!this.aspectLocked) {
+      this.lockBtn.click();
+    }
   }
 
   private updateCropArea(updates: Partial<CropArea>) {

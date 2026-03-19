@@ -74,7 +74,7 @@
                 <span class="material-symbols-outlined text-sm">straighten</span>
                 Dimensions
               </h3>
-              <div class="flex items-end gap-3">
+              <div class="flex items-end gap-3 mb-6">
                 <div class="flex-1">
                   <label class="block text-[10px] text-text-muted mb-1.5 font-medium uppercase">Width</label>
                   <div class="relative">
@@ -92,6 +92,19 @@
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-text-muted font-mono pointer-events-none">PX</span>
                   </div>
                 </div>
+              </div>
+
+              <h3 class="text-xs font-bold tracking-widest text-text-muted mb-4 uppercase flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">aspect_ratio</span>
+                Presets
+              </h3>
+              <div id="presets-grid" class="grid grid-cols-3 gap-2">
+                <button data-ratio="1:1" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">1:1</button>
+                <button data-ratio="16:9" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">16:9</button>
+                <button data-ratio="4:3" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">4:3</button>
+                <button data-ratio="3:2" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">3:2</button>
+                <button data-ratio="2:3" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">2:3</button>
+                <button data-ratio="9:16" class="h-9 bg-black/40 border border-border-dark rounded-sm text-[10px] font-mono text-text-muted hover:border-primary hover:text-primary transition-colors">9:16</button>
               </div>
             </div>
             <div class="flex-1"></div>
