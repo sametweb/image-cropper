@@ -36,8 +36,36 @@ class StudioCropper {
   private resetBtn = document.getElementById('reset-btn')!;
   private downloadLink = document.getElementById('download-link') as HTMLAnchorElement;
 
+  // Branding Elements
+  private appNameEl = document.getElementById('app-name')!;
+  private heroTitleEl = document.getElementById('hero-title')!;
+  private heroDescEl = document.getElementById('hero-desc')!;
+
   constructor() {
+    this.setupBranding();
     this.initEventListeners();
+  }
+
+  private setupBranding() {
+    const hostname = window.location.hostname;
+    let name = 'Studio Cropper';
+    let title = 'Drag and drop your image here';
+    let desc = 'Zero-friction local file processing. Total privacy. Supports JPG, PNG, WEBP.';
+
+    if (hostname.includes('onlineimagecropper.com')) {
+      name = 'Online Image Cropper';
+      title = 'Fastest Online Image Cropper';
+      desc = 'The fastest way to crop images online. Zero-friction local file processing. Total privacy.';
+    } else if (hostname.includes('photocroptool.com')) {
+      name = 'Photo Crop Tool';
+      title = 'Professional Photo Crop Tool';
+      desc = 'Professional photo cropping tool for everyone. Zero-friction local file processing. Total privacy.';
+    }
+
+    this.appNameEl.textContent = name;
+    this.heroTitleEl.textContent = title;
+    this.heroDescEl.textContent = desc;
+    document.title = name;
   }
 
   private initEventListeners() {
