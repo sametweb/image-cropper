@@ -51,21 +51,40 @@ class StudioCropper {
     let name = 'Studio Cropper';
     let title = 'Drag and drop your image here';
     let desc = 'Zero-friction local file processing. Total privacy. Supports JPG, PNG, WEBP.';
+    let metaDesc = 'A professional-grade local image cropping tool with a technical studio aesthetic. Zero-friction, total privacy.';
 
     if (hostname.includes('onlineimagecropper.com')) {
       name = 'Online Image Cropper';
       title = 'Fastest Online Image Cropper';
       desc = 'The fastest way to crop images online. Zero-friction local file processing. Total privacy.';
+      metaDesc = 'Crop images online instantly with Online Image Cropper. Fast, local processing, and 100% private.';
     } else if (hostname.includes('photocroptool.com')) {
       name = 'Photo Crop Tool';
       title = 'Professional Photo Crop Tool';
       desc = 'Professional photo cropping tool for everyone. Zero-friction local file processing. Total privacy.';
+      metaDesc = 'Professional photo cropping tool for everyone. Crop your photos with precision using Photo Crop Tool.';
     }
 
     this.appNameEl.textContent = name;
     this.heroTitleEl.textContent = title;
     this.heroDescEl.textContent = desc;
     document.title = name;
+
+    // Update Meta Tags
+    const metaDescEl = document.getElementById('meta-desc');
+    if (metaDescEl) metaDescEl.setAttribute('content', metaDesc);
+
+    const ogTitle = document.getElementById('og-title');
+    if (ogTitle) ogTitle.setAttribute('content', name);
+
+    const ogDesc = document.getElementById('og-desc');
+    if (ogDesc) ogDesc.setAttribute('content', metaDesc);
+
+    const twitterTitle = document.getElementById('twitter-title');
+    if (twitterTitle) twitterTitle.setAttribute('content', name);
+
+    const twitterDesc = document.getElementById('twitter-desc');
+    if (twitterDesc) twitterDesc.setAttribute('content', metaDesc);
   }
 
   private initEventListeners() {
