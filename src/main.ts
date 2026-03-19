@@ -13,6 +13,9 @@ class StudioCropper {
   private imageSize = { width: 0, height: 0 };
   private cropArea: CropArea = { x: 0, y: 0, width: 400, height: 300 };
   private aspectLocked = true;
+  private isDragging = false;
+  private activeHandle: string | null = null;
+  private dragStart = { x: 0, y: 0, cropX: 0, cropY: 0, cropW: 0, cropH: 0 };
 
   // Elements
   private views = {
@@ -125,7 +128,6 @@ class StudioCropper {
         const ratio = this.cropArea.height / this.cropArea.width;
         this.updateCropArea({ height: Math.round(val * ratio) });
       }
-      this.renderOverlay();
     });
 
     this.heightInput.addEventListener('input', () => {
@@ -135,7 +137,6 @@ class StudioCropper {
         const ratio = this.cropArea.width / this.cropArea.height;
         this.updateCropArea({ width: Math.round(val * ratio) });
       }
-      this.renderOverlay();
     });
 
     this.lockBtn.addEventListener('click', () => {
@@ -155,6 +156,116 @@ class StudioCropper {
     // Actions
     this.renderBtn.addEventListener('click', () => this.renderCrop());
     this.resetBtn.addEventListener('click', () => this.setStep('upload'));
+
+    // Dragging
+    this.cropOverlay.addEventListener('pointerdown', (e) => {
+      if (this.step !== 'crop') return;
+      
+      const handle = (e.target as HTMLElement).closest('.handle') as HTMLElement;
+      if (handle) {
+        this.activeHandle = handle.dataset.handle!;
+        this.isDragging = false;
+      } else {
+        this.isDragging = true;
+        this.activeHandle = null;
+      }
+
+      this.dragStart = {
+        x: e.clientX,
+        y: e.clientY,
+        cropX: this.cropArea.x,
+        cropY: this.cropArea.y,
+        cropW: this.cropArea.width,
+        cropH: this.cropArea.height
+      };
+      this.cropOverlay.setPointerCapture(e.pointerId);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!this.isDragging && !this.activeHandle) return;
+
+      const scaleX = this.imageSize.width / this.sourceImage.clientWidth;
+      const scaleY = this.imageSize.height / this.sourceImage.clientHeight;
+
+      const dx = (e.clientX - this.dragStart.x) * scaleX;
+      const dy = (e.clientY - this.dragStart.y) * scaleY;
+
+      if (this.isDragging) {
+        let newX = this.dragStart.cropX + dx;
+        let newY = this.dragStart.cropY + dy;
+
+        // Bounds check
+        newX = Math.max(0, Math.min(newX, this.imageSize.width - this.cropArea.width));
+        newY = Math.max(0, Math.min(newY, this.imageSize.height - this.cropArea.height));
+
+        this.updateCropArea({ x: newX, y: newY });
+      } else if (this.activeHandle) {
+        let x = this.dragStart.cropX;
+        let y = this.dragStart.cropY;
+        let width = this.dragStart.cropW;
+        let height = this.dragStart.cropH;
+        const ratio = this.dragStart.cropW / this.dragStart.cropH;
+
+        if (this.activeHandle.includes('r')) width = this.dragStart.cropW + dx;
+        if (this.activeHandle.includes('l')) {
+          width = this.dragStart.cropW - dx;
+          x = this.dragStart.cropX + dx;
+        }
+        if (this.activeHandle.includes('b')) height = this.dragStart.cropH + dy;
+        if (this.activeHandle.includes('t')) {
+          height = this.dragStart.cropH - dy;
+          y = this.dragStart.cropY + dy;
+        }
+
+        // Aspect ratio lock
+        if (this.aspectLocked) {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            height = width / ratio;
+            if (this.activeHandle.includes('t')) y = this.dragStart.cropY + (this.dragStart.cropH - height);
+          } else {
+            width = height * ratio;
+            if (this.activeHandle.includes('l')) x = this.dragStart.cropX + (this.dragStart.cropW - width);
+          }
+        }
+
+        // Minimum size
+        const minSize = 20;
+        if (width < minSize) {
+          width = minSize;
+          if (this.activeHandle.includes('l')) x = this.dragStart.cropX + (this.dragStart.cropW - minSize);
+        }
+        if (height < minSize) {
+          height = minSize;
+          if (this.activeHandle.includes('t')) y = this.dragStart.cropY + (this.dragStart.cropH - minSize);
+        }
+
+        // Bounds check
+        if (x < 0) {
+          width += x;
+          x = 0;
+        }
+        if (y < 0) {
+          height += y;
+          y = 0;
+        }
+        if (x + width > this.imageSize.width) width = this.imageSize.width - x;
+        if (y + height > this.imageSize.height) height = this.imageSize.height - y;
+
+        // Re-apply aspect ratio if locked after bounds check
+        if (this.aspectLocked) {
+          if (width / height > ratio) width = height * ratio;
+          else height = width / ratio;
+        }
+
+        this.updateCropArea({ x, y, width, height });
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      this.isDragging = false;
+      this.activeHandle = null;
+      this.cropOverlay.releasePointerCapture(e.pointerId);
+    });
   }
 
   private handleFile(file: File) {
@@ -169,16 +280,15 @@ class StudioCropper {
       const img = new Image();
       img.onload = () => {
         this.imageSize = { width: img.width, height: img.height };
-        const initialWidth = Math.min(img.width * 0.8, 800);
-        const initialHeight = Math.min(img.height * 0.8, 600);
-        this.cropArea = {
-          x: (img.width - initialWidth) / 2,
-          y: (img.height - initialHeight) / 2,
-          width: initialWidth,
-          height: initialHeight
-        };
+        this.widthInput.max = img.width.toString();
+        this.heightInput.max = img.height.toString();
+        this.updateCropArea({
+          x: 0,
+          y: 0,
+          width: img.width,
+          height: img.height
+        });
         this.setStep('crop');
-        this.renderOverlay();
       };
       img.src = result;
     };
@@ -222,7 +332,6 @@ class StudioCropper {
     const newY = (this.imageSize.height - newHeight) / 2;
 
     this.updateCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
-    this.renderOverlay();
     
     // Auto-lock aspect ratio if a preset is selected
     if (!this.aspectLocked) {
@@ -234,6 +343,7 @@ class StudioCropper {
     this.cropArea = { ...this.cropArea, ...updates };
     this.widthInput.value = Math.round(this.cropArea.width).toString();
     this.heightInput.value = Math.round(this.cropArea.height).toString();
+    this.renderOverlay();
   }
 
   private renderOverlay() {
@@ -244,9 +354,6 @@ class StudioCropper {
     this.cropOverlay.style.top = `${(y / imgH) * 100}%`;
     this.cropOverlay.style.width = `${(width / imgW) * 100}%`;
     this.cropOverlay.style.height = `${(height / imgH) * 100}%`;
-
-    this.widthInput.value = Math.round(width).toString();
-    this.heightInput.value = Math.round(height).toString();
   }
 
   private renderCrop() {

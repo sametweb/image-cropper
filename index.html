@@ -68,7 +68,7 @@
             <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, #00F0FF 1px, transparent 0); background-size: 32px 32px;"></div>
             <div id="canvas-container" class="relative inline-block shadow-2xl">
               <img id="source-image" class="max-w-full max-h-[70vh] object-contain select-none pointer-events-none" />
-              <div id="crop-overlay" class="absolute border border-primary crop-mask pointer-events-auto cursor-move">
+              <div id="crop-overlay" class="absolute border border-primary crop-mask pointer-events-auto cursor-move touch-none select-none">
                 <div class="absolute inset-0 flex flex-col justify-evenly pointer-events-none">
                   <div class="w-full h-px bg-white/20"></div>
                   <div class="w-full h-px bg-white/20"></div>
@@ -77,10 +77,10 @@
                   <div class="w-px h-full bg-white/20"></div>
                   <div class="w-px h-full bg-white/20"></div>
                 </div>
-                <div class="absolute -top-1 -left-1 w-2 h-2 bg-primary"></div>
-                <div class="absolute -top-1 -right-1 w-2 h-2 bg-primary"></div>
-                <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-primary"></div>
-                <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-primary"></div>
+                <div class="absolute -top-1 -left-1 w-2 h-2 bg-primary cursor-nwse-resize handle hover:scale-150 transition-transform" data-handle="tl"></div>
+                <div class="absolute -top-1 -right-1 w-2 h-2 bg-primary cursor-nesw-resize handle hover:scale-150 transition-transform" data-handle="tr"></div>
+                <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-primary cursor-nesw-resize handle hover:scale-150 transition-transform" data-handle="bl"></div>
+                <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-primary cursor-nwse-resize handle hover:scale-150 transition-transform" data-handle="br"></div>
               </div>
             </div>
           </div>
